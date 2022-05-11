@@ -72,38 +72,27 @@ class ShareViewController: SLComposeServiceViewController {
       }
 
       if let data = extraData {
-        self.storeExtraData(data)
+          storeExtraData(data)
       } else {
-        self.removeExtraData()
+          removeExtraData()
       }
-
-      let semaphore = DispatchSemaphore(value: 0)
-      var results: [Any] = []
-
-      for item in items {
-        guard let attachments = item.attachments else {
-          self.cancelRequest()
-          return
-        }
-
-        for provider in attachments {
-          if provider.isText {
-            self.storeText(withProvider: provider, semaphore)
-          } else if provider.isURL {
-            self.storeUrl(withProvider: provider, semaphore)
-          } else {
-            self.storeFile(withProvider: provider, semaphore)
-          }
-
-          semaphore.wait()
-        }
+      
+      if let message =
+            self.textView.text {
+          var extra : [String:Any] = [String:Any]()
+          extra["message"] = message
+          storeExtraData(extra)
       }
-
-      userDefaults.set(self.sharedItems,
-                       forKey: USER_DEFAULTS_KEY)
-      userDefaults.synchronize()
-
-      self.openHostApp()
+      else {
+          removeExtraData()
+      }
+      
+      if provider.isText {
+          storeText(withProvider: provider)
+      } else if provider.isURL {
+          storeUrl(withProvider: provider)
+      } else {
+          storeFile(withProvider: provider)
     }
   }
 

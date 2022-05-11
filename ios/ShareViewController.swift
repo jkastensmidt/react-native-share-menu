@@ -54,72 +54,72 @@ class ShareViewController: SLComposeServiceViewController {
         // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
         return []
     }
-
-  func handlePost(_ items: [NSExtensionItem], extraData: [String:Any]? = nil) {
-    DispatchQueue.global().async {
-      guard let hostAppId = self.hostAppId else {
-        self.exit(withError: NO_INFO_PLIST_INDENTIFIER_ERROR)
-          return
-      }
-        guard let userDefaults = UserDefaults(suiteName: "group.\(hostAppId)") else {
-            self.exit(withError: NO_APP_GROUP_ERROR)
+    
+    func handlePost(_ items: [NSExtensionItem], extraData: [String:Any]? = nil) {
+        DispatchQueue.global().async {
+            guard let hostAppId = self.hostAppId else {
+                self.exit(withError: NO_INFO_PLIST_INDENTIFIER_ERROR)
+                return
+            }
+            guard let userDefaults = UserDefaults(suiteName: "group.\(hostAppId)") else {
+                self.exit(withError: NO_APP_GROUP_ERROR)
+                return
+            }
+            
+            if let data = extraData {
+                self.storeExtraData(data)
+            } else {
+                self.removeExtraData()
+            }
+            
+            if let message =
+                self.textView.text {
+                var extra : [String:Any] = [String:Any]()
+                extra["message"] = message
+                storeExtraData(extra)
+            }
+            else {
+                removeExtraData()
+            }
+            
+            let semaphore = DispatchSemaphore(value: 0)
+            var results: [Any] = []
+            
+            for item in items {
+                guard let attachments = item.attachments else {
+                    self.cancelRequest()
+                    return
+                }
+                
+                for provider in attachments {
+                    if provider.isText {
+                        self.storeText(withProvider: provider, semaphore)
+                    } else if provider.isURL {
+                        self.storeUrl(withProvider: provider, semaphore)
+                    } else {
+                        self.storeFile(withProvider: provider, semaphore)
+                    }
+                    
+                    semaphore.wait()
+                }
+            }
+            
+            userDefaults.set(self.sharedItems,
+                             forKey: USER_DEFAULTS_KEY)
+            userDefaults.synchronize()
+            
+            self.openHostApp()
+        }
+    }
+    
+    func storeExtraData(_ data: [String:Any]) {
+        guard let hostAppId = self.hostAppId else {
+            print("Error: \(NO_INFO_PLIST_INDENTIFIER_ERROR)")
             return
         }
-        
-        if let data = extraData {
-            self.storeExtraData(data)
-        } else {
-            self.removeExtraData()
-        }
-        
-        if let message =
-            self.textView.text {
-            var extra : [String:Any] = [String:Any]()
-            extra["message"] = message
-            storeExtraData(extra)
-        }
-        else {
-            removeExtraData()
-        }
-        
-        let semaphore = DispatchSemaphore(value: 0)
-        var results: [Any] = []
-        
-        for item in items {
-            guard let attachments = item.attachments else {
-          self.cancelRequest()
-          return
-        }
-
-        for provider in attachments {
-          if provider.isText {
-            self.storeText(withProvider: provider, semaphore)
-          } else if provider.isURL {
-            self.storeUrl(withProvider: provider, semaphore)
-          } else {
-            self.storeFile(withProvider: provider, semaphore)
-          }
-
-          semaphore.wait()
-        }
-      }
-
-      userDefaults.set(self.sharedItems,
-                       forKey: USER_DEFAULTS_KEY)
-      userDefaults.synchronize()
-
-      self.openHostApp()
-    }
-  }
-
-  func storeExtraData(_ data: [String:Any]) {
-    guard let hostAppId = self.hostAppId else {
-      print("Error: \(NO_INFO_PLIST_INDENTIFIER_ERROR)")
-      return
-    }
-    guard let userDefaults = UserDefaults(suiteName: "group.\(hostAppId)") else {
-      print("Error: \(NO_APP_GROUP_ERROR)")
-      return
+        guard let userDefaults = UserDefaults(suiteName: "group.\(hostAppId)") else {
+            print("Error: \(NO_APP_GROUP_ERROR)")
+            return
     }
     userDefaults.set(data, forKey: USER_DEFAULTS_EXTRA_DATA_KEY)
     userDefaults.synchronize()

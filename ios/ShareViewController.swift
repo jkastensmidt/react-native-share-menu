@@ -6,7 +6,7 @@
 //
 //  Created by Gustavo Parreira on 26/07/2020.
 //
-//  Modified by Damien White on 18/06/2022.
+//  Modified by Veselin Stoyanov on 17/04/2021.
 
 import Foundation
 import MobileCoreServices
@@ -47,12 +47,7 @@ class ShareViewController: SLComposeServiceViewController {
         return
       }
 
-      if (contentText != nil && contentText != "") {
-        let extraData: [String: Any] = ["userInput": contentText as String]
-        handlePost(items, extraData: extraData)
-      } else {
-        handlePost(items)
-      }
+      handlePost(items)
     }
 
     override func configurationItems() -> [Any]! {
@@ -64,35 +59,56 @@ class ShareViewController: SLComposeServiceViewController {
     DispatchQueue.global().async {
       guard let hostAppId = self.hostAppId else {
         self.exit(withError: NO_INFO_PLIST_INDENTIFIER_ERROR)
-        return
+          return
       }
-      guard let userDefaults = UserDefaults(suiteName: "group.\(hostAppId)") else {
-        self.exit(withError: NO_APP_GROUP_ERROR)
-        return
+        guard let userDefaults = UserDefaults(suiteName: "group.\(hostAppId)") else {
+            self.exit(withError: NO_APP_GROUP_ERROR)
+            return
+        }
+        
+        if let data = extraData {
+            self.storeExtraData(data)
+        } else {
+            self.removeExtraData()
+        }
+        
+        if let message =
+            self.textView.text {
+            var extra : [String:Any] = [String:Any]()
+            extra["message"] = message
+            storeExtraData(extra)
+        }
+        else {
+            removeExtraData()
+        }
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        var results: [Any] = []
+        
+        for item in items {
+            guard let attachments = item.attachments else {
+          self.cancelRequest()
+          return
+        }
+
+        for provider in attachments {
+          if provider.isText {
+            self.storeText(withProvider: provider, semaphore)
+          } else if provider.isURL {
+            self.storeUrl(withProvider: provider, semaphore)
+          } else {
+            self.storeFile(withProvider: provider, semaphore)
+          }
+
+          semaphore.wait()
+        }
       }
 
-      if let data = extraData {
-          storeExtraData(data)
-      } else {
-          removeExtraData()
-      }
-      
-      if let message =
-            self.textView.text {
-          var extra : [String:Any] = [String:Any]()
-          extra["message"] = message
-          storeExtraData(extra)
-      }
-      else {
-          removeExtraData()
-      }
-      
-      if provider.isText {
-          storeText(withProvider: provider)
-      } else if provider.isURL {
-          storeUrl(withProvider: provider)
-      } else {
-          storeFile(withProvider: provider)
+      userDefaults.set(self.sharedItems,
+                       forKey: USER_DEFAULTS_KEY)
+      userDefaults.synchronize()
+
+      self.openHostApp()
     }
   }
 

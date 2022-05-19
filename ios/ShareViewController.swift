@@ -76,10 +76,10 @@ class ShareViewController: SLComposeServiceViewController {
                 self.textView.text {
                 var extra : [String:Any] = [String:Any]()
                 extra["message"] = message
-                storeExtraData(extra)
+                self.storeExtraData(extra)
             }
             else {
-                removeExtraData()
+                self.removeExtraData()
             }
             
             let semaphore = DispatchSemaphore(value: 0)

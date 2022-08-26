@@ -6,7 +6,7 @@
 //
 //  Created by Gustavo Parreira on 26/07/2020.
 //
-//  Modified by Veselin Stoyanov on 17/04/2021.
+//  Modified by Damien White on 18/06/2022.
 
 import Foundation
 import MobileCoreServices

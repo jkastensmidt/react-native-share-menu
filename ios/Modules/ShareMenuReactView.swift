@@ -99,7 +99,7 @@ public class ShareMenuReactView: NSObject {
             let items:[NSExtensionItem]! = context.inputItems as? [NSExtensionItem]
             var results: [[String: String]] = []
             
-            print("items: \(items)")
+            print("items",items)
 
             for item in items {
                 
@@ -108,15 +108,22 @@ public class ShareMenuReactView: NSObject {
                     return
                 }
 
-                print("attachments: \(attachments)")
+                print("attachments", attachments)
 
                 for provider in attachments {
                     if provider.hasItemConformingToTypeIdentifier(kUTTypeURL as String) {
                         provider.loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil) { (item, error) in
-                            let url: URL! = item as? URL
+                            // let url: URL! = item as? URL
 
-                            results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: "text/plain"])
+                            // results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: "text/plain"])
 
+                            // semaphore.signal()
+
+                            if error == nil {
+                                if let url = item as? URL {
+                                    results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: "text/plain"])
+                                }
+                            }
                             semaphore.signal()
                         }
                         semaphore.wait()
@@ -130,49 +137,47 @@ public class ShareMenuReactView: NSObject {
                         }
                         semaphore.wait()
                     } else if provider.hasItemConformingToTypeIdentifier(kUTTypeImage as String) {
+                        provider.loadItem(forTypeIdentifier: kUTTypeImage as String, options: nil) { (item, error) in
+                            let imageUrl: URL! = item as? URL
 
-                        
-                        // provider.loadItem(forTypeIdentifier: kUTTypeImage as String, options: nil) { (item, error) in
-                        //     let imageUrl: URL! = item as? URL
+                            if (imageUrl != nil) {
+                                if let imageData = try? Data(contentsOf: imageUrl) {
+                                    results.append([DATA_KEY: imageUrl.absoluteString, MIME_TYPE_KEY: self.extractMimeType(from: imageUrl)])
+                                }
+                            } else {
+                                let image: UIImage! = item as? UIImage
 
-                        //     if (imageUrl != nil) {
-                        //         if let imageData = try? Data(contentsOf: imageUrl) {
-                        //             results.append([DATA_KEY: imageUrl.absoluteString, MIME_TYPE_KEY: self.extractMimeType(from: imageUrl)])
-                        //         }
-                        //     } else {
-                        //         let image: UIImage! = item as? UIImage
+                                if (image != nil) {
+                                    let imageData: Data! = image.pngData();
 
-                        //         if (image != nil) {
-                        //             let imageData: Data! = image.pngData();
+                                    // Creating temporary URL for image data (UIImage)
+                                    guard let imageURL = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("TemporaryScreenshot.png") else {
+                                        return
+                                    }
 
-                        //             // Creating temporary URL for image data (UIImage)
-                        //             guard let imageURL = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("TemporaryScreenshot.png") else {
-                        //                 return
-                        //             }
+                                    do {
+                                        // Writing the image to the URL
+                                        try imageData.write(to: imageURL)
 
-                        //             do {
-                        //                 // Writing the image to the URL
-                        //                 try imageData.write(to: imageURL)
+                                        results.append([DATA_KEY: imageURL.absoluteString, MIME_TYPE_KEY: imageURL.extractMimeType()])
+                                    } catch {
+                                        callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"Can't load image", userInfo:nil))
+                                    }
+                                }
+                            }
 
-                        //                 results.append([DATA_KEY: imageUrl.absoluteString, MIME_TYPE_KEY: imageURL.extractMimeType()])
-                        //             } catch {
-                        //                 callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"Can't load image", userInfo:nil))
-                        //             }
-                        //         }
-                        //     }
-
-                        //     semaphore.signal()
-                        // }
-                        // semaphore.wait()
+                            semaphore.signal()
+                        }
+                        semaphore.wait()
                     } else if provider.hasItemConformingToTypeIdentifier(kUTTypeData as String) {
-                        // provider.loadItem(forTypeIdentifier: kUTTypeData as String, options: nil) { (item, error) in
-                        //     let url: URL! = item as? URL
+                        provider.loadItem(forTypeIdentifier: kUTTypeData as String, options: nil) { (item, error) in
+                            let url: URL! = item as? URL
 
-                        //     results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: self.extractMimeType(from: url)])
+                            results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: self.extractMimeType(from: url)])
 
-                        //     semaphore.signal()
-                        // }
-                        // semaphore.wait()
+                            semaphore.signal()
+                        }
+                        semaphore.wait()
                     } else {
                         callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"couldn't find provider", userInfo:nil))
                     }

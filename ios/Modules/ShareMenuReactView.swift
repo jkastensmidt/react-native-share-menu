@@ -98,8 +98,11 @@ public class ShareMenuReactView: NSObject {
             let semaphore = DispatchSemaphore(value: 0)
             let items:[NSExtensionItem]! = context.inputItems as? [NSExtensionItem]
             var results: [[String: String]] = []
+            
+            print("items: \(items)")
 
             for item in items {
+                
                 guard let attachments = item.attachments else {
                     callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"couldn't find attachments", userInfo:nil))
                     return

@@ -105,6 +105,8 @@ public class ShareMenuReactView: NSObject {
                     return
                 }
 
+                print("attachments: \(attachments)")
+
                 for provider in attachments {
                     if provider.hasItemConformingToTypeIdentifier(kUTTypeURL as String) {
                         provider.loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil) { (item, error) in

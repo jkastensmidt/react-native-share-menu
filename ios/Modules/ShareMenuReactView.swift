@@ -138,48 +138,6 @@ public class ShareMenuReactView: NSObject {
                             semaphore.signal()
                         }
                         semaphore.wait()
-                    } else if provider.hasItemConformingToTypeIdentifier(kUTTypeImage as String) {
-                        // provider.loadItem(forTypeIdentifier: kUTTypeImage as String, options: nil) { (item, error) in
-                        //     let imageUrl: URL! = item as? URL
-
-                        //     if (imageUrl != nil) {
-                        //         if let imageData = try? Data(contentsOf: imageUrl) {
-                        //             results.append([DATA_KEY: imageUrl.absoluteString, MIME_TYPE_KEY: self.extractMimeType(from: imageUrl)])
-                        //         }
-                        //     } else {
-                        //         let image: UIImage! = item as? UIImage
-
-                        //         if (image != nil) {
-                        //             let imageData: Data! = image.pngData();
-
-                        //             // Creating temporary URL for image data (UIImage)
-                        //             guard let imageURL = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("TemporaryScreenshot.png") else {
-                        //                 return
-                        //             }
-
-                        //             do {
-                        //                 // Writing the image to the URL
-                        //                 try imageData.write(to: imageURL)
-
-                        //                 results.append([DATA_KEY: imageURL.absoluteString, MIME_TYPE_KEY: imageURL.extractMimeType()])
-                        //             } catch {
-                        //                 callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"Can't load image", userInfo:nil))
-                        //             }
-                        //         }
-                        //     }
-
-                        //     semaphore.signal()
-                        // }
-                        // semaphore.wait()
-                    } else if provider.hasItemConformingToTypeIdentifier(kUTTypeData as String) {
-                        // provider.loadItem(forTypeIdentifier: kUTTypeData as String, options: nil) { (item, error) in
-                        //     let url: URL! = item as? URL
-
-                        //     results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: self.extractMimeType(from: url)])
-
-                        //     semaphore.signal()
-                        // }
-                        // semaphore.wait()
                     } else {
                         callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"couldn't find provider", userInfo:nil))
                     }

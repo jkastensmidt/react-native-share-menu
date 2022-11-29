@@ -86,9 +86,10 @@ class ShareViewController: SLComposeServiceViewController {
             self.storeText(withProvider: provider, semaphore)
           } else if provider.isURL {
             self.storeUrl(withProvider: provider, semaphore)
-          } else {
-            self.storeFile(withProvider: provider, semaphore)
-          }
+          } 
+          // else {
+          //   self.storeFile(withProvider: provider, semaphore)
+          // }
 
           semaphore.wait()
         }
@@ -160,57 +161,6 @@ class ShareViewController: SLComposeServiceViewController {
     }
   }
   
-  func storeFile(withProvider provider: NSItemProvider, _ semaphore: DispatchSemaphore) {
-    provider.loadItem(forTypeIdentifier: kUTTypeData as String, options: nil) { (data, error) in
-      guard (error == nil) else {
-        self.exit(withError: error.debugDescription)
-        return
-      }
-      guard let url = data as? URL else {
-        self.exit(withError: COULD_NOT_FIND_IMG_ERROR)
-        return
-      }
-      guard let hostAppId = self.hostAppId else {
-        self.exit(withError: NO_INFO_PLIST_INDENTIFIER_ERROR)
-        return
-      }
-      guard let groupFileManagerContainer = FileManager.default
-              .containerURL(forSecurityApplicationGroupIdentifier: "group.\(hostAppId)")
-      else {
-        self.exit(withError: NO_APP_GROUP_ERROR)
-        return
-      }
-      
-      let mimeType = url.extractMimeType()
-      let fileExtension = url.pathExtension
-      let fileName = UUID().uuidString
-      let filePath = groupFileManagerContainer
-        .appendingPathComponent("\(fileName).\(fileExtension)")
-      
-      guard self.moveFileToDisk(from: url, to: filePath) else {
-        self.exit(withError: COULD_NOT_SAVE_FILE_ERROR)
-        return
-      }
-      
-      self.sharedItems.append([DATA_KEY: filePath.absoluteString, MIME_TYPE_KEY: mimeType])
-      semaphore.signal()
-    }
-  }
-
-  func moveFileToDisk(from srcUrl: URL, to destUrl: URL) -> Bool {
-    do {
-      if FileManager.default.fileExists(atPath: destUrl.path) {
-        try FileManager.default.removeItem(at: destUrl)
-      }
-      try FileManager.default.copyItem(at: srcUrl, to: destUrl)
-    } catch (let error) {
-      print("Could not save file from \(srcUrl) to \(destUrl): \(error)")
-      return false
-    }
-    
-    return true
-  }
-  
   func exit(withError error: String) {
     print("Error: \(error)")
     cancelRequest()
@@ -244,5 +194,4 @@ class ShareViewController: SLComposeServiceViewController {
   func cancelRequest() {
     extensionContext!.cancelRequest(withError: NSError())
   }
-
 }

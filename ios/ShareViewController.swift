@@ -146,7 +146,7 @@ class ShareViewController: SLComposeServiceViewController {
   }
   
   func storeUrl(withProvider provider: NSItemProvider, _ semaphore: DispatchSemaphore) {
-    provider.loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil) { (data, error) in
+    provider.loadItem(forTypeIdentifier: "public.url", options: nil) { (data, error) in
       guard (error == nil) else {
         self.exit(withError: error.debugDescription)
         return

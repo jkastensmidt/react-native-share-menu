@@ -115,12 +115,6 @@ public class ShareMenuReactView: NSObject {
                 for provider in attachments {
                     if provider.hasItemConformingToTypeIdentifier("public.url") {
                         provider.loadItem(forTypeIdentifier: "public.url", options: nil) { (item, error) in
-                            // let url: URL! = item as? URL
-
-                            // results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: "text/plain"])
-
-                            // semaphore.signal()
-
                             if error == nil {
                                 if let url = item as? URL {
                                     results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: "text/plain"])
@@ -129,16 +123,19 @@ public class ShareMenuReactView: NSObject {
                             semaphore.signal()
                         }
                         semaphore.wait()
-                    } else if provider.hasItemConformingToTypeIdentifier(kUTTypeText as String) {
-                        provider.loadItem(forTypeIdentifier: kUTTypeText as String, options: nil) { (item, error) in
-                            let text:String! = item as? String
-
-                            results.append([DATA_KEY: text, MIME_TYPE_KEY: "text/plain"])
-
+                    } else if provider.hasItemConformingToTypeIdentifier("public.plain-text") {
+                        provider.loadItem(forTypeIdentifier: "public.plain-text", options: nil) { (item, error) in
+                            if error == nil {
+                                if error == nil {
+                                    if let text = item as? String {
+                                        results.append([DATA_KEY: text, MIME_TYPE_KEY: "text/plain"])
+                                    }
+                                }
+                            }
                             semaphore.signal()
                         }
                         semaphore.wait()
-                    } else {
+                    }  else {
                         callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"couldn't find provider", userInfo:nil))
                     }
                 }

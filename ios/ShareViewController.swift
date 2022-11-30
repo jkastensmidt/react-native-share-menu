@@ -56,6 +56,7 @@ class ShareViewController: SLComposeServiceViewController {
     }
 
   func handlePost(_ items: [NSExtensionItem], extraData: [String:Any]? = nil) {
+    print("handlePost")
     DispatchQueue.global().async {
       guard let hostAppId = self.hostAppId else {
         self.exit(withError: NO_INFO_PLIST_INDENTIFIER_ERROR)
@@ -65,35 +66,43 @@ class ShareViewController: SLComposeServiceViewController {
         self.exit(withError: NO_APP_GROUP_ERROR)
         return
       }
+      print("1")
 
       if let data = extraData {
         self.storeExtraData(data)
       } else {
         self.removeExtraData()
       }
-
+      
       let semaphore = DispatchSemaphore(value: 0)
-      var results: [Any] = []
+      
+      print("items", items)
 
       for item in items {
+        print("item", item)
+
         guard let attachments = item.attachments else {
           self.cancelRequest()
           return
         }
 
         for provider in attachments {
+          print("provider 1", provider)
+
           if provider.isText {
             self.storeText(withProvider: provider, semaphore)
           } else if provider.isURL {
+            print("provider 2", provider)
             self.storeUrl(withProvider: provider, semaphore)
-          } 
-          // else {
-          //   self.storeFile(withProvider: provider, semaphore)
-          // }
+          } else {
+            semaphore.signal()
+          }
 
           semaphore.wait()
         }
       }
+      
+      print("self.sharedItems", self.sharedItems)
 
       userDefaults.set(self.sharedItems,
                        forKey: USER_DEFAULTS_KEY)

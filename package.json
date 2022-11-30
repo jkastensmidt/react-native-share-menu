@@ -4,7 +4,7 @@
   "version": "6.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/meedan/react-native-share-menu.git"
+    "url": "git+https://github.com/bobvanratingen/react-native-share-menu.git"
   },
   "keywords": [
     "react-component",
@@ -19,7 +19,7 @@
     "name": "Meedan",
     "email": "hello@meedan.com"
   },
-  "homepage": "https://github.com/meedan/react-native-share-menu",
+  "homepage": "https://github.com/bobvanratingen/react-native-share-menu",
   "license": "MIT",
   "readmeFilename": "README.md"
 }

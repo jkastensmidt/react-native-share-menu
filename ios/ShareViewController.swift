@@ -98,8 +98,6 @@ class ShareViewController: SLComposeServiceViewController {
           } else if provider.isURL {
             print("provider 2", provider)
             self.storeUrl(withProvider: provider, semaphore)
-          } else {
-            semaphore.signal()
           }
 
           semaphore.wait()

@@ -83,6 +83,22 @@ public class ShareMenuReactView: NSObject {
             return
         }
 
+        // var urlFound = "Nonefound";
+        // if let item = extensionContext.inputItems.first as? NSExtensionItem {
+        //     if let itemProvider = item.attachments?.first as? NSItemProvider {
+        //         if itemProvider.hasItemConformingToTypeIdentifier("public.url") {
+        //             itemProvider.loadItem(forTypeIdentifier: "public.url", options: nil, completionHandler: { (url, error) -> Void in
+        //                 if let shareURL = url as? NSURL {
+        //                     // send url to server to share the link
+        //                     print("AWESOME URL HERE",shareURL)
+        //                 urlFound = shareURL.absoluteString ?? "StillNoneFound!"
+        //                 }
+        //                 resolve([MIME_TYPE_KEY: "text/plain", DATA_KEY: urlFound])
+        //             })
+        //         }
+        //     }
+        // }
+
         extractDataFromContext(context: extensionContext) { (data, error) in
             guard (error == nil) else {
                 reject("error", error?.description, nil)
@@ -105,14 +121,14 @@ public class ShareMenuReactView: NSObject {
 
             for item in items {
                 
-                guard let attachments = item.attachments else {
+                guard let providers = item.attachments else {
                     callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"couldn't find attachments", userInfo:nil))
                     return
                 }
 
-                print("attachments", attachments)
+                print("providers", providers)
 
-                for provider in attachments {
+                for provider in providers {
                     if provider.hasItemConformingToTypeIdentifier("public.url") {
                         provider.loadItem(forTypeIdentifier: "public.url", options: nil) { (item, error) in
                             if error == nil {

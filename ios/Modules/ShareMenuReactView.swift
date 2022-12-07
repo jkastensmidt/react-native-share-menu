@@ -152,7 +152,7 @@ public class ShareMenuReactView: NSObject {
                         }
                         semaphore.wait()
                     }  else {
-                        callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"couldn't find provider", userInfo:nil))
+                        continue
                     }
                 }
             }

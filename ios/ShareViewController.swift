@@ -40,6 +40,10 @@ class ShareViewController: SLComposeServiceViewController {
         return true
     }
 
+    override func loadPreviewView() -> UIView! {
+      return nil
+    }
+
     override func didSelectPost() {
         // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
       guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {

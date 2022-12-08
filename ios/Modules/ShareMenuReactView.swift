@@ -142,10 +142,8 @@ public class ShareMenuReactView: NSObject {
                     } else if provider.hasItemConformingToTypeIdentifier("public.plain-text") {
                         provider.loadItem(forTypeIdentifier: "public.plain-text", options: nil) { (item, error) in
                             if error == nil {
-                                if error == nil {
-                                    if let text = item as? String {
-                                        results.append([DATA_KEY: text, MIME_TYPE_KEY: "text/plain"])
-                                    }
+                                if let text = item as? String {
+                                    results.append([DATA_KEY: text, MIME_TYPE_KEY: "text/plain"])
                                 }
                             }
                             semaphore.signal()

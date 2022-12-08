@@ -141,7 +141,7 @@ class ShareViewController: SLComposeServiceViewController {
   }
   
   func storeText(withProvider provider: NSItemProvider, _ semaphore: DispatchSemaphore) {
-    provider.loadItem(forTypeIdentifier: kUTTypeText as String, options: nil) { (data, error) in
+    provider.loadItem(forTypeIdentifier: "public.plain-text" as String, options: nil) { (data, error) in
       guard (error == nil) else {
         self.exit(withError: error.debugDescription)
         return

@@ -133,7 +133,7 @@ Add the following to your Share Extension's `Info.plist`:
 </dict>
 ```
 
-## Edit AppDelegate.m
+## Edit AppDelegate.mm
 
 Finally, in your `AppDelegate.mm` add the following:
 

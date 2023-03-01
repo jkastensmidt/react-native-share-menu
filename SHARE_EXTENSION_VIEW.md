@@ -2,7 +2,7 @@
 
 ### If you want a custom sharing view, do these steps
 
-## Create Bridging Header
+## Create Bridging Header (Or use the the auto generated ShareExtension-Bridging-Header.h)
 
 Right click on your Share Extension folder, and choose `New File...`
 
@@ -16,6 +16,7 @@ Add the following to the new `Bridging-Header.h` file:
 
 ```Objective-c
 #import <React/RCTBridge.h>
+#import <Expo/Expo.h>
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTBridgeDelegate.h>
 #import <React/RCTRootView.h>

@@ -135,7 +135,7 @@ Add the following to your Share Extension's `Info.plist`:
 
 ## Edit AppDelegate.m
 
-Finally, in your `AppDelegate.m` add the following:
+Finally, in your `AppDelegate.mm` add the following:
 
 ```Objective-c
 ...
@@ -146,11 +146,17 @@ Finally, in your `AppDelegate.m` add the following:
 @implementation AppDelegate
     ...
 
-    - (BOOL)application:(UIApplication *)app
-            openURL:(NSURL *)url
-            options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options
-    {
-      return [ShareMenuManager application:app openURL:url options:options];
+    // Linking API
+    - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+      NSString *urlString = url.absoluteString;
+
+      if ([urlString hasPrefix:@"mindmapp://"]) {
+        NSLog(@"Entered with the following string: %@s", urlString);
+        return [ShareMenuManager application:application openURL:url options:options];
+      }
+
+      return [super application:application openURL:url options:options] || [RCTLinkingManager application:application openURL:url options:options];
     }
+
 @end
 ```

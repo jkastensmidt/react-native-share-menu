@@ -88,6 +88,12 @@ If you're planning to run builds outside the simulator, or to make Release build
 - Leave the shell as `/bin/sh` and paste the following as the script:
 
 ```shell
+# Fix for machines using nvm
+if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
+. "$HOME/.nvm/nvm.sh"
+elif [[ -x "$(command -v brew)" && -s "$(brew --prefix nvm)/nvm.sh" ]]; then
+. "$(brew --prefix nvm)/nvm.sh"
+fi
 export NODE_BINARY=node
 export ENTRY_FILE=index.share.js
 ../node_modules/react-native/scripts/react-native-xcode.sh

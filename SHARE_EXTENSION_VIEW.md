@@ -88,15 +88,18 @@ If you're planning to run builds outside the simulator, or to make Release build
 - Leave the shell as `/bin/sh` and paste the following as the script:
 
 ```shell
-# Fix for machines using nvm
-if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
-. "$HOME/.nvm/nvm.sh"
-elif [[ -x "$(command -v brew)" && -s "$(brew --prefix nvm)/nvm.sh" ]]; then
-. "$(brew --prefix nvm)/nvm.sh"
-fi
-export NODE_BINARY=node
-export ENTRY_FILE=index.share.js
-../node_modules/react-native/scripts/react-native-xcode.sh
+set -e
+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+REACT_NATIVE_XCODE="../node_modules/react-native/scripts/react-native-xcode.sh"
+
+/bin/sh -c "$WITH_ENVIRONMENT $REACT_NATIVE_XCODE"
+```
+- The Input Files section for this script has:
+
+```shell
+$(SRCROOT)/.xcode.env.local
+$(SRCROOT)/.xcode.env
 ```
 
 - Drag it behind `[CP] Copy Pods Resources`

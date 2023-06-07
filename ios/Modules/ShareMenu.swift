@@ -1,37 +1,19 @@
 @objc(ShareMenu)
 class ShareMenu: RCTEventEmitter {
 
-    private(set) static var _shared: ShareMenu?
-    @objc public static var shared: ShareMenu
-    {
-        get {
-            return ShareMenu._shared!
-        }
-    }
-
+    static let shared = ShareMenu()
     var sharedData: [[String:String]?]?
-
     static var initialShare: (UIApplication, URL, [UIApplication.OpenURLOptionsKey : Any])?
-
     var hasListeners = false
-
     var _targetUrlScheme: String?
-    var targetUrlScheme: String
-    {
-        get {
-            return _targetUrlScheme!
-        }
-    }
-
+    
     public override init() {
         super.init()
-        ShareMenu._shared = self
-
         if let (app, url, options) = ShareMenu.initialShare {
             share(application: app, openUrl: url, options: options)
         }
     }
-
+    
     override static public func requiresMainQueueSetup() -> Bool {
         return false
     }
@@ -53,11 +35,6 @@ class ShareMenu: RCTEventEmitter {
         openUrl url: URL,
         options: [UIApplication.OpenURLOptionsKey : Any]
     ) {
-        guard (ShareMenu._shared != nil) else {
-            initialShare = (app, url, options)
-            return
-        }
-        
         ShareMenu.shared.share(application: app, openUrl: url, options: options)
     }
     
@@ -65,24 +42,16 @@ class ShareMenu: RCTEventEmitter {
         application app: UIApplication,
         openUrl url: URL,
         options: [UIApplication.OpenURLOptionsKey : Any]) {
+        
         if _targetUrlScheme == nil {
-            guard let bundleUrlTypes = Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [NSDictionary] else {
-                print("Error: \(NO_URL_TYPES_ERROR_MESSAGE)")
-                return
-            }
-            guard let bundleUrlSchemes = bundleUrlTypes.first?.value(forKey: "CFBundleURLSchemes") as? [String] else {
-                print("Error: \(NO_URL_SCHEMES_ERROR_MESSAGE)")
-                return
-            }
-            guard let expectedUrlScheme = bundleUrlSchemes.first else {
+            guard let expectedUrlScheme = fetchTargetUrlScheme() else {
                 print("Error \(NO_URL_SCHEMES_ERROR_MESSAGE)")
                 return
             }
-
             _targetUrlScheme = expectedUrlScheme
         }
 
-        guard let scheme = url.scheme, scheme == targetUrlScheme else { return }
+        guard let scheme = url.scheme, scheme == _targetUrlScheme else { return }
         guard let bundleId = Bundle.main.bundleIdentifier else { return }
         guard let userDefaults = UserDefaults(suiteName: "group.\(bundleId)") else {
             print("Error: \(NO_APP_GROUP_ERROR)")
@@ -96,6 +65,23 @@ class ShareMenu: RCTEventEmitter {
             dispatchEvent(with: data, and: extraData)
             userDefaults.removeObject(forKey: USER_DEFAULTS_KEY)
         }
+    }
+
+    func fetchTargetUrlScheme() -> String? {
+        guard let bundleUrlTypes = Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [NSDictionary] else {
+            print("Error: \(NO_URL_TYPES_ERROR_MESSAGE)")
+            return nil
+        }
+        guard let bundleUrlSchemes = bundleUrlTypes.first?.value(forKey: "CFBundleURLSchemes") as? [String] else {
+            print("Error: \(NO_URL_SCHEMES_ERROR_MESSAGE)")
+            return nil
+        }
+        guard let expectedUrlScheme = bundleUrlSchemes.first else {
+            print("Error \(NO_URL_SCHEMES_ERROR_MESSAGE)")
+            return nil
+        }
+
+        return expectedUrlScheme
     }
 
     @objc(getSharedText:)
@@ -115,11 +101,13 @@ class ShareMenu: RCTEventEmitter {
     func dispatchEvent(with data: [[String:String]], and extraData: [String:Any]?) {
         guard hasListeners else { return }
 
-        var finalData = [DATA_KEY: data] as [String: Any]
-        if (extraData != nil) {
-            finalData[EXTRA_DATA_KEY] = extraData
+        DispatchQueue.main.async { [weak self] in
+            var finalData = [DATA_KEY: data] as [String: Any]
+            if let extraData = extraData {
+                finalData[EXTRA_DATA_KEY] = extraData
+            }
+            
+            self?.sendEvent(withName: NEW_SHARE_EVENT, body: finalData)
         }
-        
-        sendEvent(withName: NEW_SHARE_EVENT, body: finalData)
     }
 }

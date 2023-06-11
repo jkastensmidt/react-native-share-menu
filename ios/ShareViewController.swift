@@ -40,25 +40,17 @@ class ShareViewController: SLComposeServiceViewController {
       cancelRequest()
       return
     }
+    handlePost(items)
+  }
 
-    override func loadPreviewView() -> UIView! {
-      return nil
-    }
-
-    override func didSelectPost() {
-        // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
-      guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
-        cancelRequest()
-        return
-      }
-
-      handlePost(items)
-    }
-
-    override func configurationItems() -> [Any]! {
-        // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
-        return []
-    }
+  override func loadPreviewView() -> UIView! {
+    return nil
+  }
+  
+  override func configurationItems() -> [Any]! {
+      // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
+      return []
+  }
 
   func handlePost(_ items: [NSExtensionItem], extraData: [String:Any]? = nil) {
     print("handlePost")
@@ -229,3 +221,4 @@ class ShareViewController: SLComposeServiceViewController {
     extensionContext!.cancelRequest(withError: NSError())
   }
 }
+

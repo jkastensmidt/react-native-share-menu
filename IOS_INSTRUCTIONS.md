@@ -147,15 +147,11 @@ Finally, in your `AppDelegate.mm` add the following:
     ...
 
     // Linking API
-    - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
-      NSString *urlString = url.absoluteString;
-
-      if ([urlString hasPrefix:@"mindmapp://"]) {
-        NSLog(@"Entered with the following string: %@s", urlString);
-        return [ShareMenuManager application:application openURL:url options:options];
-      }
-
-      return [super application:application openURL:url options:options] || [RCTLinkingManager application:application openURL:url options:options];
+     - (BOOL)application:(UIApplication *)app
+            openURL:(NSURL *)url
+            options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options
+    {
+      return [ShareMenuManager application:app openURL:url options:options];
     }
 
 @end

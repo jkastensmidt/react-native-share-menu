@@ -9,11 +9,11 @@ import MobileCoreServices
 
 public extension NSItemProvider {
     var isText: Bool {
-        return hasItemConformingToTypeIdentifier("public.plain-text")
+        return hasItemConformingToTypeIdentifier(kUTTypeText as String)
     }
 
     var isURL: Bool {
-        return hasItemConformingToTypeIdentifier("public.url") && !isFileURL
+        return hasItemConformingToTypeIdentifier(kUTTypeURL as String) && !isFileURL
     }
 
     var isFileURL: Bool {

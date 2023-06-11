@@ -16,7 +16,6 @@ Add the following to the new `Bridging-Header.h` file:
 
 ```Objective-c
 #import <React/RCTBridge.h>
-#import <Expo/Expo.h>
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTBridgeDelegate.h>
 #import <React/RCTRootView.h>

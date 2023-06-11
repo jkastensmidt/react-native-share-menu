@@ -41,21 +41,28 @@ class ShareViewController: SLComposeServiceViewController {
       return
     }
 
-    handlePost(items)
-  }
+    override func loadPreviewView() -> UIView! {
+      return nil
+    }
 
-  override func configurationItems() -> [Any]! {
-    // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
-    return []
-  }
-
-  func handlePost(_ items: [NSExtensionItem], extraData: [String: Any]? = nil) {
-    DispatchQueue.global().async { [weak self] in
-      guard let self = self else {
-        print("Self is not available. Exiting.")
+    override func didSelectPost() {
+        // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
+      guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
+        cancelRequest()
         return
       }
 
+      handlePost(items)
+    }
+
+    override func configurationItems() -> [Any]! {
+        // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
+        return []
+    }
+
+  func handlePost(_ items: [NSExtensionItem], extraData: [String:Any]? = nil) {
+    print("handlePost")
+    DispatchQueue.global().async {
       guard let hostAppId = self.hostAppId else {
         print("Error: \(NO_INFO_PLIST_INDENTIFIER_ERROR)")
         self.cancelRequest()
@@ -67,6 +74,7 @@ class ShareViewController: SLComposeServiceViewController {
         self.cancelRequest()
         return
       }
+      print("1")
 
       if let data = extraData {
         DispatchQueue.main.async {
@@ -89,28 +97,36 @@ class ShareViewController: SLComposeServiceViewController {
           self.removeExtraData()
         }
       }
-
+      
       let semaphore = DispatchSemaphore(value: 0)
-      var results: [Any] = []
+      
+      print("items", items)
 
       for item in items {
+        print("item", item)
+
         guard let attachments = item.attachments else {
           self.cancelRequest()
           return
         }
 
         for provider in attachments {
+          print("provider 1", provider)
+
           if provider.isText {
             self.storeText(withProvider: provider, semaphore)
           } else if provider.isURL {
+            print("provider 2", provider)
             self.storeUrl(withProvider: provider, semaphore)
           } else {
-            self.storeFile(withProvider: provider, semaphore)
+            continue
           }
 
           semaphore.wait()
         }
       }
+      
+      print("self.sharedItems", self.sharedItems)
 
       DispatchQueue.main.async {
         userDefaults.set(self.sharedItems, forKey: USER_DEFAULTS_KEY)
@@ -148,8 +164,8 @@ class ShareViewController: SLComposeServiceViewController {
   }
 
   func storeText(withProvider provider: NSItemProvider, _ semaphore: DispatchSemaphore) {
-    provider.loadItem(forTypeIdentifier: kUTTypeText as String, options: nil) { (data, error) in
-      guard error == nil else {
+    provider.loadItem(forTypeIdentifier: "public.plain-text" as String, options: nil) { (data, error) in
+      guard (error == nil) else {
         self.exit(withError: error.debugDescription)
         return
       }
@@ -164,8 +180,8 @@ class ShareViewController: SLComposeServiceViewController {
   }
 
   func storeUrl(withProvider provider: NSItemProvider, _ semaphore: DispatchSemaphore) {
-    provider.loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil) { (data, error) in
-      guard error == nil else {
+    provider.loadItem(forTypeIdentifier: "public.url", options: nil) { (data, error) in
+      guard (error == nil) else {
         self.exit(withError: error.debugDescription)
         return
       }
@@ -178,66 +194,13 @@ class ShareViewController: SLComposeServiceViewController {
       semaphore.signal()
     }
   }
-
-  func storeFile(withProvider provider: NSItemProvider, _ semaphore: DispatchSemaphore) {
-    provider.loadItem(forTypeIdentifier: kUTTypeData as String, options: nil) { (data, error) in
-      guard error == nil else {
-        self.exit(withError: error.debugDescription)
-        return
-      }
-      guard let url = data as? URL else {
-        self.exit(withError: COULD_NOT_FIND_IMG_ERROR)
-        return
-      }
-      guard let hostAppId = self.hostAppId else {
-        self.exit(withError: NO_INFO_PLIST_INDENTIFIER_ERROR)
-        return
-      }
-      guard
-        let groupFileManagerContainer = FileManager.default
-          .containerURL(forSecurityApplicationGroupIdentifier: "group.\(hostAppId)")
-      else {
-        self.exit(withError: NO_APP_GROUP_ERROR)
-        return
-      }
-
-      let mimeType = url.extractMimeType()
-      let fileExtension = url.pathExtension
-      let fileName = UUID().uuidString
-      let filePath =
-        groupFileManagerContainer
-        .appendingPathComponent("\(fileName).\(fileExtension)")
-
-      guard self.moveFileToDisk(from: url, to: filePath) else {
-        self.exit(withError: COULD_NOT_SAVE_FILE_ERROR)
-        return
-      }
-
-      self.sharedItems.append([DATA_KEY: filePath.absoluteString, MIME_TYPE_KEY: mimeType])
-      semaphore.signal()
-    }
-  }
-
-  func moveFileToDisk(from srcUrl: URL, to destUrl: URL) -> Bool {
-    do {
-      if FileManager.default.fileExists(atPath: destUrl.path) {
-        try FileManager.default.removeItem(at: destUrl)
-      }
-      try FileManager.default.copyItem(at: srcUrl, to: destUrl)
-    } catch (let error) {
-      print("Could not save file from \(srcUrl) to \(destUrl): \(error)")
-      return false
-    }
-
-    return true
-  }
-
+  
   func exit(withError error: String) {
     print("Error: \(error)")
     cancelRequest()
   }
 
-  internal func openHostApp() {
+  func openHostApp() {
     guard let urlScheme = self.hostAppUrlScheme else {
       exit(withError: NO_INFO_PLIST_URL_SCHEME_ERROR)
       return
@@ -265,5 +228,4 @@ class ShareViewController: SLComposeServiceViewController {
   func cancelRequest() {
     extensionContext!.cancelRequest(withError: NSError())
   }
-
 }

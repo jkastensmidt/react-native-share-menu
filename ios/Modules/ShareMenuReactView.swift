@@ -18,7 +18,7 @@ public class ShareMenuReactView: NSObject {
     }
 
     public static func attachViewDelegate(_ delegate: ReactShareViewDelegate!) {
-        guard (ShareMenuReactView.viewDelegate == nil) else { return }
+//         guard (ShareMenuReactView.viewDelegate == nil) else { return }
 
         ShareMenuReactView.viewDelegate = delegate
     }
@@ -83,6 +83,22 @@ public class ShareMenuReactView: NSObject {
             return
         }
 
+        // var urlFound = "Nonefound";
+        // if let item = extensionContext.inputItems.first as? NSExtensionItem {
+        //     if let itemProvider = item.attachments?.first as? NSItemProvider {
+        //         if itemProvider.hasItemConformingToTypeIdentifier("public.url") {
+        //             itemProvider.loadItem(forTypeIdentifier: "public.url", options: nil, completionHandler: { (url, error) -> Void in
+        //                 if let shareURL = url as? NSURL {
+        //                     // send url to server to share the link
+        //                     print("AWESOME URL HERE",shareURL)
+        //                 urlFound = shareURL.absoluteString ?? "StillNoneFound!"
+        //                 }
+        //                 resolve([MIME_TYPE_KEY: "text/plain", DATA_KEY: urlFound])
+        //             })
+        //         }
+        //     }
+        // }
+
         extractDataFromContext(context: extensionContext) { (data, error) in
             guard (error == nil) else {
                 reject("error", error?.description, nil)
@@ -98,76 +114,43 @@ public class ShareMenuReactView: NSObject {
             let semaphore = DispatchSemaphore(value: 0)
             let items:[NSExtensionItem]! = context.inputItems as? [NSExtensionItem]
             var results: [[String: String]] = []
+            
+            NSLog("Test")
+            print("items",items)
+            NSLog("items",items)
 
             for item in items {
-                guard let attachments = item.attachments else {
+                
+                guard let providers = item.attachments else {
                     callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"couldn't find attachments", userInfo:nil))
                     return
                 }
 
-                for provider in attachments {
-                    if provider.hasItemConformingToTypeIdentifier(kUTTypeURL as String) {
-                        provider.loadItem(forTypeIdentifier: kUTTypeURL as String, options: nil) { (item, error) in
-                            let url: URL! = item as? URL
+                print("providers", providers)
 
-                            results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: "text/plain"])
-
-                            semaphore.signal()
-                        }
-                        semaphore.wait()
-                    } else if provider.hasItemConformingToTypeIdentifier(kUTTypeText as String) {
-                        provider.loadItem(forTypeIdentifier: kUTTypeText as String, options: nil) { (item, error) in
-                            let text:String! = item as? String
-
-                            results.append([DATA_KEY: text, MIME_TYPE_KEY: "text/plain"])
-
-                            semaphore.signal()
-                        }
-                        semaphore.wait()
-                    } else if provider.hasItemConformingToTypeIdentifier(kUTTypeImage as String) {
-                        provider.loadItem(forTypeIdentifier: kUTTypeImage as String, options: nil) { (item, error) in
-                            let imageUrl: URL! = item as? URL
-
-                            if (imageUrl != nil) {
-                                if let imageData = try? Data(contentsOf: imageUrl) {
-                                    results.append([DATA_KEY: imageUrl.absoluteString, MIME_TYPE_KEY: self.extractMimeType(from: imageUrl)])
-                                }
-                            } else {
-                                let image: UIImage! = item as? UIImage
-
-                                if (image != nil) {
-                                    let imageData: Data! = image.pngData();
-
-                                    // Creating temporary URL for image data (UIImage)
-                                    guard let imageURL = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("TemporaryScreenshot.png") else {
-                                        return
-                                    }
-
-                                    do {
-                                        // Writing the image to the URL
-                                        try imageData.write(to: imageURL)
-
-                                        results.append([DATA_KEY: imageURL.absoluteString, MIME_TYPE_KEY: imageURL.extractMimeType()])
-                                    } catch {
-                                        callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"Can't load image", userInfo:nil))
-                                    }
+                for provider in providers {
+                    if provider.hasItemConformingToTypeIdentifier("public.url") {
+                        provider.loadItem(forTypeIdentifier: "public.url", options: nil) { (item, error) in
+                            if error == nil {
+                                if let url = item as? URL {
+                                    results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: "text/plain"])
                                 }
                             }
-
                             semaphore.signal()
                         }
                         semaphore.wait()
-                    } else if provider.hasItemConformingToTypeIdentifier(kUTTypeData as String) {
-                        provider.loadItem(forTypeIdentifier: kUTTypeData as String, options: nil) { (item, error) in
-                            let url: URL! = item as? URL
-
-                            results.append([DATA_KEY: url.absoluteString, MIME_TYPE_KEY: self.extractMimeType(from: url)])
-
+                    } else if provider.hasItemConformingToTypeIdentifier("public.plain-text") {
+                        provider.loadItem(forTypeIdentifier: "public.plain-text", options: nil) { (item, error) in
+                            if error == nil {
+                                if let text = item as? String {
+                                    results.append([DATA_KEY: text, MIME_TYPE_KEY: "text/plain"])
+                                }
+                            }
                             semaphore.signal()
                         }
                         semaphore.wait()
-                    } else {
-                        callback(nil, NSException(name: NSExceptionName(rawValue: "Error"), reason:"couldn't find provider", userInfo:nil))
+                    }  else {
+                        continue
                     }
                 }
             }

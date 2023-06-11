@@ -2,7 +2,7 @@
 
 ### If you want a custom sharing view, do these steps
 
-## Create Bridging Header
+## Create Bridging Header (Or use the the auto generated ShareExtension-Bridging-Header.h)
 
 Right click on your Share Extension folder, and choose `New File...`
 
@@ -16,6 +16,7 @@ Add the following to the new `Bridging-Header.h` file:
 
 ```Objective-c
 #import <React/RCTBridge.h>
+#import <Expo/Expo.h>
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTBridgeDelegate.h>
 #import <React/RCTRootView.h>
@@ -87,9 +88,18 @@ If you're planning to run builds outside the simulator, or to make Release build
 - Leave the shell as `/bin/sh` and paste the following as the script:
 
 ```shell
-export NODE_BINARY=node
-export ENTRY_FILE=index.share.js
-../node_modules/react-native/scripts/react-native-xcode.sh
+set -e
+
+WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
+REACT_NATIVE_XCODE="../node_modules/react-native/scripts/react-native-xcode.sh"
+
+/bin/sh -c "$WITH_ENVIRONMENT $REACT_NATIVE_XCODE"
+```
+- The Input Files section for this script has:
+
+```shell
+$(SRCROOT)/.xcode.env.local
+$(SRCROOT)/.xcode.env
 ```
 
 - Drag it behind `[CP] Copy Pods Resources`

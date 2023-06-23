@@ -27,13 +27,14 @@ class ShareViewController: SLComposeServiceViewController {
     } else {
       print("Error: \(NO_INFO_PLIST_URL_SCHEME_ERROR)")
     }
+    if let items = self.extensionContext?.inputItems as? [NSExtensionItem] {
+      handlePost(items)
+    }
   }
-
   override func isContentValid() -> Bool {
     // Do validation of contentText and/or NSExtensionContext attachments here
     return true
   }
-
   override func didSelectPost() {
     // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
     guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
@@ -43,12 +44,18 @@ class ShareViewController: SLComposeServiceViewController {
 
     handlePost(items)
   }
-
   override func configurationItems() -> [Any]! {
     // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
     return []
   }
-
+  override func presentationAnimationDidFinish() {
+    completeRequest()
+  }
+  override func loadView() {
+    let view = UIView()
+    view.backgroundColor = UIColor.clear
+    self.view = view
+  }
   func handlePost(_ items: [NSExtensionItem], extraData: [String: Any]? = nil) {
     DispatchQueue.global().async { [weak self] in
       guard let self = self else {
